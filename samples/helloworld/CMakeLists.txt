@@ -7,6 +7,13 @@ project("Hello World Sample" LANGUAGES C CXX)
 
 find_package(OpenEnclave CONFIG REQUIRED)
 
+if(WIN32)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/../../../../lib/openenclave/cmake")
+endif()
+
+set(CMAKE_C_COMPILER_NAMES clang cc)
+set(CMAKE_CXX_COMPILER_NAMES clang++ c++)
+
 set(CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(enclave)

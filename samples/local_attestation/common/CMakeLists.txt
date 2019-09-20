@@ -1,6 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+if(WIN32)
+  include(maybe_build_using_clangw)
+endif()
+
 # Use the edger8r to generate C bindings from the EDL file.
 add_custom_command(OUTPUT localattestation_t.h localattestation_t.c localattestation_args.h
   DEPENDS ${CMAKE_SOURCE_DIR}/localattestation.edl
@@ -8,7 +12,13 @@ add_custom_command(OUTPUT localattestation_t.h localattestation_t.c localattesta
 
 # Create a library common to each of our two enclaves.
 add_library(common STATIC attestation.cpp crypto.cpp dispatcher.cpp ${CMAKE_CURRENT_BINARY_DIR}/localattestation_t.c)
+
+if(WIN32)
+  maybe_build_using_clangw(common)
+endif()
+
 target_compile_definitions(common PUBLIC OE_API_VERSION=2)
+if(NOT WIN32)
 target_link_libraries(common PUBLIC
   # `liboecore`, a dependency of `liboeenclave`, requires the ecalls
   # function table. Because the libraries linking `libcommon` do not
@@ -20,4 +30,9 @@ target_link_libraries(common PUBLIC
   -Wl,--require-defined=__oe_ecalls_table
   openenclave::oeenclave
   openenclave::oelibcxx)
+else()
+target_link_libraries(common PUBLIC
+  openenclave::oeenclave
+  openenclave::oelibcxx)
+endif()
 target_include_directories(common PUBLIC ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})

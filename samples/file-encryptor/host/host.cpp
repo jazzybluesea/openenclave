@@ -7,7 +7,9 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#if defined(__linux__)
 #include <unistd.h>
+#endif
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -74,6 +76,14 @@ int get_file_size(FILE* file, size_t* _file_size)
 
     *_file_size = (size_t)ftell(file);
     fseek(file, oldpos, SEEK_SET);
+    {
+       unsigned char buffer[9000];
+       unsigned int bytes_read = 0;
+       bytes_read = fread(buffer, 1, *_file_size, file);
+       cout << "bytes_read = " << bytes_read << "file_size is" << *_file_size << endl;
+       fseek(file, oldpos, SEEK_SET);
+    }
+
 exit:
     return ret;
 }
@@ -144,7 +154,7 @@ int encrypt_file(
     }
 
     // open source and dest files
-    src_file = fopen(input_file, "r");
+    src_file = fopen(input_file, "rb");
     if (!src_file)
     {
         cout << "Host: fopen " << input_file << " failed." << endl;
@@ -159,7 +169,7 @@ int encrypt_file(
         goto exit;
     }
     src_data_size = src_file_size;
-    dest_file = fopen(output_file, "w");
+    dest_file = fopen(output_file, "wb");
     if (!dest_file)
     {
         cerr << "Host: fopen " << output_file << " failed." << endl;

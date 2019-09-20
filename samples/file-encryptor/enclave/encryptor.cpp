@@ -75,6 +75,7 @@ int ecall_dispatcher::encrypt_block(
     size_t size)
 {
     int ret = 0;
+    TRACE_ENCLAVE("Calling encrypt %d size=%d", encrypt, size);
     ret = mbedtls_aes_crypt_cbc(
         &m_aescontext,
         encrypt ? MBEDTLS_AES_ENCRYPT : MBEDTLS_AES_DECRYPT,

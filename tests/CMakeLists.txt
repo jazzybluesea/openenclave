@@ -64,6 +64,7 @@ if (UNIX OR ADD_WINDOWS_ENCLAVE_TESTS OR USE_CLANGW)
         add_subdirectory(SampleAppCRT)
         add_subdirectory(sealKey)
         add_subdirectory(stdc)
+	add_subdirectory(switchless)
         add_subdirectory(syscall)
         add_subdirectory(VectorException)
     endif()
@@ -96,5 +97,4 @@ if (OE_SGX AND UNIX)
 
    # Attestation supported only on Linux
    add_subdirectory(tls_e2e)
-   add_subdirectory(switchless)
 endif()

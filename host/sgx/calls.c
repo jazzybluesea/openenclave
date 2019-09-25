@@ -339,7 +339,7 @@ static const char* oe_ocall_str(oe_func_t ocall)
         "FREE",
         "SLEEP",
         "GET_TIME",
-        "FUTEX_WAKE",
+        "WAKE_HOST_WORKER",
     };
     // clang-format on
 

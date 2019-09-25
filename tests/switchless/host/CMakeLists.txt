@@ -11,7 +11,10 @@ add_custom_command(
 # Dummy target used for generating from EDL on demand.
 add_custom_target(switchless_host_gen DEPENDS switchless_u.h switchless_u.c switchless_args.h)
 
-add_executable(switchless_host host.c switchless_u.c)
+add_executable(switchless_host host.cpp switchless_u.c)
+
+target_compile_definitions(switchless_host PRIVATE
+  OE_CONTEXT_SWITCHLESS_EXPERIMENTAL_FEATURE)
 
 target_include_directories(switchless_host PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(switchless_host oehostapp)

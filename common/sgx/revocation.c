@@ -122,10 +122,11 @@ static oe_result_t _get_revocation_validity(
     oe_datetime_log("CRL validity from date: ", &current_from);
     oe_datetime_log("CRL validity until date: ", &current_until);
 
-    // Currently we are ignoring TCB Info validity dates because
-    // the data is expired.  See Icm 148493545
-    latest_from = current_from;
-    earliest_until = current_until;
+    if (oe_datetime_compare(&current_from, &latest_from) > 0)
+        latest_from = current_from;
+
+    if (oe_datetime_compare(&current_until, &earliest_until) < 0)
+        earliest_until = current_until;
 
     oe_datetime_log("Revocation overall validity from date: ", &latest_from);
     oe_datetime_log(

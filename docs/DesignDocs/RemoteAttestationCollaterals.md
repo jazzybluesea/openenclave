@@ -425,8 +425,10 @@ oe_result_t oe_verify_evidence(
     size_t* claims_size);
 ```
 
-### OE Host Verify Library
+### Claims
+As part of the claims form `oe_verify_evidence()`, there will be a validity datetime range that applies to the evidence and endorsements.  For more information see the design document `CustomAttestation.md`.
 
+### OE Host Verify Library
 The OE Host Verify library is a standalone library used for verifying remote reports outside
 the TEE/enclave. The function `oe_verfiy_remote_report()` will be deprecated and should use the
 upcoming plug-in mode to do verification.

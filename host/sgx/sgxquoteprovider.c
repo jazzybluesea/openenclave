@@ -4,6 +4,7 @@
 #include <openenclave/bits/safecrt.h>
 #include <openenclave/internal/hexdump.h>
 #include <openenclave/internal/raise.h>
+#include <openenclave/internal/time.h>
 #include <openenclave/internal/trace.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,6 +61,10 @@ oe_result_t oe_get_revocation_info(oe_get_revocation_info_args_t* args)
     uint8_t* p = 0;
     uint8_t* p_end = 0;
 
+    uint64_t start, end, total;
+    uint64_t startlocal;
+    start = oe_get_time();
+
     OE_CHECK(oe_initialize_quote_provider());
 
     if (!provider.get_revocation_info || !provider.free_revocation_info)
@@ -82,7 +87,12 @@ oe_result_t oe_get_revocation_info(oe_get_revocation_info_args_t* args)
         }
     }
 
+    startlocal = oe_get_time();
     r = provider.get_revocation_info(&params, &revocation_info);
+    end = oe_get_time();
+    total = (end - startlocal);
+    OE_TRACE_ERROR(
+        "provider.get_revocation_info: %d, %d, %d\n", startlocal, end, total);
 
     if (r != SGX_PLAT_ERROR_OK || revocation_info == NULL)
     {
@@ -228,6 +238,11 @@ oe_result_t oe_get_revocation_info(oe_get_revocation_info_args_t* args)
 done:
     if (revocation_info != NULL)
         provider.free_revocation_info(revocation_info);
+
+    end = oe_get_time();
+    total = (end - start);
+
+    OE_TRACE_ERROR("%s: %d, %d, %d\n", __FUNCTION__, start, end, total);
 
     return result;
 }

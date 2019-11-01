@@ -15,6 +15,7 @@
 #include <openenclave/internal/report.h>
 #include <openenclave/internal/sgxcertextensions.h>
 #include <openenclave/internal/thread.h>
+#include <openenclave/internal/time.h>
 #include <openenclave/internal/trace.h>
 #include <openenclave/internal/utils.h>
 #include "../common.h"
@@ -305,6 +306,10 @@ oe_result_t oe_validate_revocation_list(
     oe_datetime_t latest_from = {0};
     oe_datetime_t earliest_until = {0};
 
+    uint64_t start, end, total;
+    uint64_t startlocal;
+    start = oe_get_time();
+
     if (pck_cert == NULL || revocation_args == NULL)
         OE_RAISE(OE_INVALID_PARAMETER);
 
@@ -312,6 +317,7 @@ oe_result_t oe_validate_revocation_list(
         OE_COUNTOF(crl_issuer_chain) ==
         OE_COUNTOF(revocation_args->crl_issuer_chain));
 
+    startlocal = oe_get_time();
     OE_CHECK_MSG(
         _parse_sgx_extensions(pck_cert, &parsed_extension_info),
         "Failed to parse SGX extensions from leaf cert. %s",
@@ -370,7 +376,12 @@ oe_result_t oe_validate_revocation_list(
             pck_cert, crl_issuer_chain, crl_ptrs, OE_COUNTOF(crl_ptrs)),
         "Failed to verify leaf certificate. %s",
         oe_result_str(result));
+    end = oe_get_time();
+    total = (end - startlocal);
+    OE_TRACE_ERROR(
+        "Revocation CRL Check: %d, %d, %d\n", startlocal, end, total);
 
+    startlocal = oe_get_time();
     for (uint32_t i = 0; i < OE_COUNTOF(platform_tcb_level.sgx_tcb_comp_svn);
          ++i)
     {
@@ -407,6 +418,11 @@ oe_result_t oe_validate_revocation_list(
             &earliest_until),
         "Failed to get revocation validity datetime info. %s",
         oe_result_str(result));
+
+    end = oe_get_time();
+    total = (end - startlocal);
+    OE_TRACE_ERROR(
+        "Revocation TCB Check: %d, %d, %d\n", startlocal, end, total);
 
     if (oe_datetime_compare(&latest_from, &_sgx_minimim_crl_tcb_issue_date) < 0)
     {
@@ -470,6 +486,11 @@ done:
     }
     oe_cert_chain_free(&tcb_issuer_chain);
     oe_cert_free(&tcb_cert);
+
+    end = oe_get_time();
+    total = (end - start);
+
+    OE_TRACE_ERROR("%s: %d, %d, %d\n", __FUNCTION__, start, end, total);
 
     return result;
 }

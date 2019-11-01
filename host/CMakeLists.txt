@@ -74,14 +74,14 @@ if (UNIX)
     crypto/openssl/key.c
     crypto/openssl/rsa.c
     crypto/openssl/sha.c
-    linux/hostthread.c)
+    linux/hostthread.c
+    linux/time.c)
 
   set(PLATFORM_SDK_ONLY_SRC
     ../common/asn1.c
     crypto/openssl/hmac.c
     crypto/openssl/random.c
     linux/syscall.c
-    linux/time.c
     linux/windows.c)
 elseif (WIN32)
   set(PLATFORM_HOST_ONLY_SRC
@@ -94,7 +94,8 @@ elseif (WIN32)
     crypto/bcrypt/sha.c
     crypto/bcrypt/pem.c
     crypto/bcrypt/util.c
-    windows/hostthread.c)
+    windows/hostthread.c
+    windows/time.c)
 
   set(PLATFORM_SDK_ONLY_SRC
     ../3rdparty/mbedtls/mbedtls/library/bignum.c
@@ -111,8 +112,7 @@ elseif (WIN32)
     crypto/bcrypt/rsa.c
     crypto/bcrypt/sha.c
     windows/hostthread.c
-    windows/syscall.c
-    windows/time.c)
+    windows/syscall.c)
 else()
   message(FATAL_ERROR "Unknown OS. Only supported OSes are Linux and Windows")
 endif()

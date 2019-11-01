@@ -10,6 +10,8 @@
 #include "quote.h"
 #include "revocation.h"
 
+#include <openenclave/internal/time.h>
+
 oe_result_t oe_get_collaterals_internal(
     const uint8_t* remote_report,
     size_t remote_report_size,
@@ -28,6 +30,10 @@ oe_result_t oe_get_collaterals_internal(
     oe_cert_t intermediate_cert = {0};
 
     OE_TRACE_INFO("Enter call %s\n", __FUNCTION__);
+
+    uint64_t start, end, total;
+    uint64_t startlocal;
+    start = oe_get_time();
 
     if ((collaterals_buffer == NULL) || (collaterals_buffer_size == NULL))
     {
@@ -76,11 +82,15 @@ oe_result_t oe_get_collaterals_internal(
         oe_result_str(result));
 
     // Get revocation information
+    startlocal = oe_get_time();
     OE_CHECK_MSG(
         oe_get_revocation_info_from_certs(
             &leaf_cert, &intermediate_cert, &(collaterals->revocation_info)),
         "Failed to get certificate revocation information. %s",
         oe_result_str(result));
+    end = oe_get_time();
+    total = (end - startlocal);
+    OE_TRACE_ERROR("GetRevocationInfo: %d, %d, %d\n", startlocal, end, total);
 
     // Application specific collaterals
     collaterals->app_collaterals_size = 0;
@@ -88,10 +98,14 @@ oe_result_t oe_get_collaterals_internal(
     //
     // QE identify info
     //
+    startlocal = oe_get_time();
     OE_CHECK_MSG(
         oe_get_qe_identity_info(&(collaterals->qe_id_info)),
         "Failed to get quote enclave identity information. %s",
         oe_result_str(result));
+    end = oe_get_time();
+    total = (end - startlocal);
+    OE_TRACE_ERROR("GetQEIDInfo: %d, %d, %d\n", startlocal, end, total);
 
     // Record creation datetime.
     {
@@ -126,6 +140,11 @@ done:
 
     OE_TRACE_INFO(
         "Exit call %s: %d(%s)\n", __FUNCTION__, result, oe_result_str(result));
+
+    end = oe_get_time();
+    total = (end - start);
+
+    OE_TRACE_ERROR("%s: %d, %d, %d\n", __FUNCTION__, start, end, total);
 
     return result;
 }

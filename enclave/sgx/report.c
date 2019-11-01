@@ -11,6 +11,7 @@
 #include <openenclave/internal/report.h>
 #include <openenclave/internal/sgxkeys.h>
 #include <openenclave/internal/sgxtypes.h>
+#include <openenclave/internal/time.h>
 #include <openenclave/internal/utils.h>
 #include <stdlib.h>
 #include "../common/sgx/quote.h"
@@ -54,6 +55,9 @@ oe_result_t oe_verify_report(
     oe_report_t oe_report = {0};
     sgx_key_t sgx_key = {{0}};
     oe_report_header_t* header = (oe_report_header_t*)report;
+
+    uint64_t start, end, total;
+    start = oe_get_time();
 
     sgx_report_t* sgx_report = NULL;
 
@@ -101,6 +105,11 @@ oe_result_t oe_verify_report(
     result = OE_OK;
 
 done:
+    end = oe_get_time();
+    total = (end - start);
+
+    OE_TRACE_ERROR("E%s: %d, %d, %d\n", __FUNCTION__, start, end, total);
+
     // Cleanup secret.
     oe_secure_zero_fill(&sgx_key, sizeof(sgx_key));
 

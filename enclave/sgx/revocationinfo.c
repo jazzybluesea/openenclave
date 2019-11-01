@@ -7,6 +7,7 @@
 #include <openenclave/enclave.h>
 #include <openenclave/internal/calls.h>
 #include <openenclave/internal/raise.h>
+#include <openenclave/internal/time.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../common/sgx/revocation.h"
@@ -29,6 +30,10 @@ oe_result_t oe_get_revocation_info(oe_get_revocation_info_args_t* args)
     if (args->num_crl_urls != 2 || !args->crl_urls[0] || !args->crl_urls[1])
         OE_RAISE(OE_INVALID_PARAMETER);
 
+    uint64_t start, end, total;
+    uint64_t startlocal;
+    start = oe_get_time();
+
     /* fmspc */
     memcpy(in.fmspc, args->fmspc, sizeof(in.fmspc));
 
@@ -38,6 +43,7 @@ oe_result_t oe_get_revocation_info(oe_get_revocation_info_args_t* args)
 
     for (;;)
     {
+        startlocal = oe_get_time();
         memcpy(&out, &in, sizeof(out));
 
         if (oe_get_revocation_info_ocall(
@@ -74,10 +80,15 @@ oe_result_t oe_get_revocation_info(oe_get_revocation_info_args_t* args)
         {
             OE_RAISE(OE_FAILURE);
         }
+        end = oe_get_time();
+        total = (end - startlocal);
+        OE_TRACE_ERROR(
+            "GetRevocationOCALL: %d, %d, %d\n", startlocal, end, total);
 
         if (retval != (oe_result_t)OE_BUFFER_TOO_SMALL)
             break;
 
+        startlocal = oe_get_time();
         /* tcb_info */
         if (in.tcb_info_size < out.tcb_info_size)
         {
@@ -126,6 +137,10 @@ oe_result_t oe_get_revocation_info(oe_get_revocation_info_args_t* args)
                 in.crl_issuer_chain_size[i] = out.crl_issuer_chain_size[i];
             }
         }
+        end = oe_get_time();
+        total = (end - startlocal);
+        OE_TRACE_ERROR(
+            "GetRevocationREALLOC: %d, %d, %d\n", startlocal, end, total);
     }
 
     OE_CHECK((oe_result_t)retval);
@@ -148,6 +163,11 @@ done:
         for (size_t i = 0; i < OE_COUNTOF(out.crl_issuer_chain); i++)
             free(out.crl_issuer_chain[i]);
     }
+
+    end = oe_get_time();
+    total = (end - start);
+
+    OE_TRACE_ERROR("%s: %d, %d, %d\n", __FUNCTION__, start, end, total);
 
     return result;
 }

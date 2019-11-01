@@ -49,3 +49,8 @@ void oe_handle_get_time(uint64_t arg_in, uint64_t* arg_out)
     if (arg_out)
         *arg_out = _time();
 }
+
+uint64_t oe_get_time(void)
+{
+    return _time();
+}

@@ -8,6 +8,7 @@
 #include <openenclave/internal/calls.h>
 #include <openenclave/internal/raise.h>
 #include <openenclave/internal/report.h>
+#include <openenclave/internal/time.h>
 #include <openenclave/internal/trace.h>
 #include <openenclave/internal/utils.h>
 #include "../common/sgx/quote.h"
@@ -279,6 +280,9 @@ oe_result_t oe_verify_report(
     oe_report_t oe_report = {0};
     oe_report_header_t* header = (oe_report_header_t*)report;
 
+    uint64_t start, end, total;
+    start = oe_get_time();
+
     if (report == NULL)
         OE_RAISE(OE_INVALID_PARAMETER);
 
@@ -322,5 +326,9 @@ oe_result_t oe_verify_report(
 
     result = OE_OK;
 done:
+    end = oe_get_time();
+    total = (end - start);
+
+    OE_TRACE_ERROR("%s: %d, %d, %d\n", __FUNCTION__, start, end, total);
     return result;
 }

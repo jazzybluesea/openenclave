@@ -7,6 +7,7 @@
 #include <openenclave/internal/datetime.h>
 #include <openenclave/internal/raise.h>
 #include <openenclave/internal/sgxtypes.h>
+#include <openenclave/internal/time.h>
 #include <openenclave/internal/utils.h>
 #include "../common.h"
 #include "collaterals.h"
@@ -438,11 +439,16 @@ oe_result_t oe_verify_quote_internal_with_collaterals(
     oe_datetime_t validity_until = {0};
     oe_datetime_t creation_time = {0};
 
+    uint64_t start, end, total;
+    uint64_t startlocal;
+    start = oe_get_time();
+
     if (quote == NULL)
         OE_RAISE(OE_INVALID_PARAMETER);
 
     if (collaterals == NULL)
     {
+        startlocal = oe_get_time();
         OE_CHECK_MSG(
             oe_get_collaterals_internal(
                 quote,
@@ -451,6 +457,10 @@ oe_result_t oe_verify_quote_internal_with_collaterals(
                 &local_collaterals_size),
             "Failed to get collaterals. %s",
             oe_result_str(result));
+
+        end = oe_get_time();
+        total = (end - startlocal);
+        OE_TRACE_ERROR("Getcollaterals: %d, %d, %d\n", startlocal, end, total);
 
         collaterals = local_collaterals;
         collaterals_size = local_collaterals_size;
@@ -466,6 +476,7 @@ oe_result_t oe_verify_quote_internal_with_collaterals(
         oe_collaterals_t* collaterals_body =
             (oe_collaterals_t*)(collaterals + OE_COLLATERALS_HEADER_SIZE);
 
+        startlocal = oe_get_time();
         OE_CHECK_MSG(
             oe_get_quote_validity_with_collaterals_internal(
                 quote,
@@ -476,6 +487,10 @@ oe_result_t oe_verify_quote_internal_with_collaterals(
                 &validity_until),
             "Failed to validate quote. %s",
             oe_result_str(result));
+
+        end = oe_get_time();
+        total = (end - startlocal);
+        OE_TRACE_ERROR("GetValidity: %d, %d, %d\n", startlocal, end, total);
 
         // Verify quote/collaterals for the given time.  Use collateral creation
         // time if one was not provided.
@@ -519,6 +534,11 @@ done:
     if (local_collaterals)
         oe_free_collaterals_internal(local_collaterals);
 
+    end = oe_get_time();
+    total = (end - start);
+
+    OE_TRACE_ERROR("%s: %d, %d, %d\n", __FUNCTION__, start, end, total);
+
     return result;
 }
 
@@ -553,6 +573,10 @@ oe_result_t oe_get_quote_validity_with_collaterals_internal(
     oe_datetime_t earliest_until = {0};
     oe_datetime_t from;
     oe_datetime_t until;
+
+    uint64_t start, end, total;
+    uint64_t startlocal;
+    start = oe_get_time();
 
     if ((quote == NULL) || (collaterals == NULL) || (valid_from == NULL) ||
         (valid_until == NULL))
@@ -603,6 +627,7 @@ oe_result_t oe_get_quote_validity_with_collaterals_internal(
         NULL);
 
     // Process certs validity dates.
+    startlocal = oe_get_time();
     OE_CHECK_MSG(
         oe_cert_get_validity_dates(&root_cert, &latest_from, &earliest_until),
         "Failed to get validity info from cert. %s",
@@ -618,8 +643,12 @@ oe_result_t oe_get_quote_validity_with_collaterals_internal(
         "Failed to get validity info from cert. %s",
         oe_result_str(result));
     _update_validity(&latest_from, &earliest_until, &from, &until);
+    end = oe_get_time();
+    total = (end - startlocal);
+    OE_TRACE_ERROR("GetValidityCERTS: %d, %d, %d\n", startlocal, end, total);
 
     // Fetch revocation info validity dates.
+    startlocal = oe_get_time();
     OE_CHECK_MSG(
         oe_validate_revocation_list(
             &pck_cert, &col->revocation_info, &from, &until),
@@ -634,6 +663,10 @@ oe_result_t oe_get_quote_validity_with_collaterals_internal(
         "Failed quoting enclave identity checking. %s",
         oe_result_str(result));
     _update_validity(&latest_from, &earliest_until, &from, &until);
+    end = oe_get_time();
+    total = (end - startlocal);
+    OE_TRACE_ERROR(
+        "GetValidityREVQEIDINFO: %d, %d, %d\n", startlocal, end, total);
 
     oe_datetime_log("Quote overall issue date: ", &latest_from);
     oe_datetime_log("Quote overall next update: ", &earliest_until);
@@ -653,6 +686,11 @@ done:
     oe_cert_free(&intermediate_cert);
     oe_cert_free(&root_cert);
     oe_cert_chain_free(&pck_cert_chain);
+
+    end = oe_get_time();
+    total = (end - start);
+
+    OE_TRACE_ERROR("%s: %d, %d, %d\n", __FUNCTION__, start, end, total);
 
     return result;
 }

@@ -1262,19 +1262,20 @@ void test_verify_report_with_collaterals()
     size_t collaterals_ptr_size = 0;
     uint8_t* collaterals_buffer_ptr = NULL;
 
-    /* Test 1: Verify report with collaterals */
+    // Get report
     OE_TEST(
         GetReport_v2(
             flags, NULL, 0, NULL, 0, &report_buffer_ptr, &report_ptr_size) ==
         OE_OK);
 
-    /* Verify report without collaterals */
+    /* Test 1: Verify report without collaterals */
     OE_TEST(
         VerifyReportWithCollaterals(
             report_buffer_ptr, report_ptr_size, NULL, 0, NULL, NULL) == OE_OK);
 
     if (GetCollaterals(&collaterals_buffer_ptr, &collaterals_ptr_size) == OE_OK)
     {
+        /* Test 2: Verify report with collaterals */
         OE_TEST(
             VerifyReportWithCollaterals(
                 report_buffer_ptr,
@@ -1284,7 +1285,7 @@ void test_verify_report_with_collaterals()
                 NULL, // Validate using current time
                 NULL) == OE_OK);
 
-        /* Test with time in the past */
+        /* Test 3: Test with time in the past */
         time_t t;
         struct tm* timeinfo;
         time(&t);
@@ -1297,6 +1298,7 @@ void test_verify_report_with_collaterals()
                               (uint32_t)timeinfo->tm_hour,
                               (uint32_t)timeinfo->tm_min,
                               (uint32_t)timeinfo->tm_sec};
+
         OE_TEST(
             VerifyReportWithCollaterals(
                 report_buffer_ptr,
@@ -1306,7 +1308,7 @@ void test_verify_report_with_collaterals()
                 &past,
                 NULL) == OE_VERIFY_FAILED_TO_FIND_VALIDITY_PERIOD);
 
-        /* Test with time in the future */
+        /* Test 4: Test with time in the future */
         oe_datetime_t future = {(uint32_t)timeinfo->tm_year + 1910,
                                 (uint32_t)timeinfo->tm_mon + 1,
                                 (uint32_t)timeinfo->tm_mday,
@@ -1333,7 +1335,7 @@ void test_verify_report_with_collaterals()
                 collaterals_ptr_size,
                 &valid_from,
                 &valid_until) == OE_OK);
-        /* At latest valid from date */
+        /* Test 5: At latest valid from date */
         OE_TEST(
             VerifyReportWithCollaterals(
                 report_buffer_ptr,
@@ -1342,7 +1344,7 @@ void test_verify_report_with_collaterals()
                 collaterals_ptr_size,
                 &valid_from,
                 NULL) == OE_OK);
-        /* At earliest expiration date */
+        /* Test 6: At earliest expiration date */
         OE_TEST(
             VerifyReportWithCollaterals(
                 report_buffer_ptr,
